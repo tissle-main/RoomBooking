@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net11.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentValidation.Validators.UnitTestExtension" Version="1.12.0.5" />
+    <PackageReference Include="TUnit" Version="1.8*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RoomBooking.WebAPI\RoomBooking.WebAPI.csproj" />
+  </ItemGroup>
+
+</Project>

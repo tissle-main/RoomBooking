@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="RoomBooking.AppHost/RoomBooking.AppHost.csproj" />
+  <Project Path="RoomBooking.Data/RoomBooking.Data.csproj" />
+  <Project Path="RoomBooking.IntegrationTests/RoomBooking.IntegrationTests.csproj" />
+  <Project Path="RoomBooking.ServiceDefaults/RoomBooking.ServiceDefaults.csproj" />
+  <Project Path="RoomBooking.UnitTests/RoomBooking.UnitTests.csproj" />
+  <Project Path="RoomBooking.WebAPI/RoomBooking.WebAPI.csproj" />
+</Solution>

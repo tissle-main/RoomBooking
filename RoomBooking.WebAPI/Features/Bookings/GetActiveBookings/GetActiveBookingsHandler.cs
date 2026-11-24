@@ -1,0 +1,37 @@
+﻿using ErrorOr;
+using Mediator;
+using RoomBooking.Data;
+using Microsoft.EntityFrameworkCore;
+using RoomBooking.Data.Entities.Rooms;
+using RoomBooking.WebAPI.Features.Rooms;
+using RoomBooking.WebAPI.Features.Bookings.Dtos;
+
+namespace RoomBooking.WebAPI.Features.Bookings.GetActiveBookings;
+
+public sealed class GetActiveBookingsHandler(
+    AppDbContext thisDbContext
+) : IQueryHandler<GetActiveBookingsQuery, ErrorOr<IEnumerable<BookingDto>>>
+{
+    #region IQueryHandler<GetActiveBookingsQuery, ErrorOr<IEnumerable<BookingDto>>>
+    public async ValueTask<ErrorOr<IEnumerable<BookingDto>>> Handle(GetActiveBookingsQuery query, CancellationToken cancellationToken)
+    {
+        RoomEntity? room = await thisDbContext.Rooms.AsNoTracking().FirstOrDefaultAsync(
+            r => r.Id == query.RoomId,
+            cancellationToken
+        );
+        if(room is null)
+        {
+            return RoomErrors.RoomNotFound(query.RoomId);
+        }
+
+        DateTime dayStart = query.Day.ToDateTime(TimeOnly.MinValue).ToUniversalTime();
+        DateTime dayEnd = query.Day.AddDays(1).ToDateTime(TimeOnly.MinValue).ToUniversalTime();
+        return await thisDbContext.Bookings.AsNoTracking().Where(
+            b => b.RoomId == room.Id
+                 && !b.Cancelled
+                 && b.StartTime < dayEnd
+                 && b.EndTime > dayStart
+        ).OrderBy(b => b.StartTime).Select(BookingDto.Projection).ToArrayAsync(cancellationToken);
+    }
+    #endregion
+}

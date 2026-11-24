@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net11.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Respawn" Version="7.0.0" />
+    <PackageReference Include="TUnit" Version="1.8*" />
+    <PackageReference Include="TUnit.Aspire" Version="1.87.12" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RoomBooking.AppHost\RoomBooking.AppHost.csproj" />
+  </ItemGroup>
+
+</Project>
