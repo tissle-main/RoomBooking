@@ -5,6 +5,8 @@ using RoomBooking.ServiceDefaults;
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();
 builder.AddSqlServerDbContext<AppDbContext>(AppHostResources.AppDatabase);
+builder.Configuration.AddUserSecrets<Program>();
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddProblemDetails(options =>
 {
     options.CustomizeProblemDetails = static void (ProblemDetailsContext ctx) =>

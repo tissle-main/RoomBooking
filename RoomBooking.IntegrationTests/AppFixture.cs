@@ -56,7 +56,7 @@ public sealed class AppFixture : AspireFixture<RoomBooking_AppHost>
 
     public override async Task InitializeAsync()
     {
-        Environment.SetEnvironmentVariable("DOTNET_LAUNCH_PROFILE", Environments.Testing);
+        Environment.SetEnvironmentVariable("DOTNET_LAUNCH_PROFILE", Environments2.Testing);
         await base.InitializeAsync();
 
         WebBaseAddress = base.CreateHttpClient(AppHostResources.WebAPI).BaseAddress;

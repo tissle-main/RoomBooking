@@ -4,7 +4,7 @@ using RoomBooking.Data.Entities.Bookings;
 using RoomBooking.WebAPI.Features.Bookings.Dtos;
 using RoomBooking.WebAPI.Features.Bookings.CreateBooking;
 
-namespace RoomBooking.UnitTests.Features.Bookings.CreateBooking;
+namespace RoomBooking.UnitTests.Features.Bookings;
 
 public sealed class CreateBookingCommandValidatorTests
 {

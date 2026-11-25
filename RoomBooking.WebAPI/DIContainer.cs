@@ -4,6 +4,7 @@ using System.Collections.Frozen;
 using RoomBooking.WebAPI.Features;
 using Microsoft.EntityFrameworkCore;
 using RoomBooking.Data.Entities.Rooms;
+using RoomBooking.WebAPI.Features.Auth;
 using RoomBooking.WebAPI.Features.Rooms;
 using RoomBooking.WebAPI.Features.Serilog;
 using RoomBooking.WebAPI.Features.Bookings;
@@ -16,6 +17,7 @@ public static class DIContainer
 {
     public static FrozenSet<FeatureProvider> Features { get; } = [
         new SerilogFeatureProvider(),
+        new AuthFeatureProvider(),
         new EndpointExplorerFeatureProvider(),
         new RoomFeatureProvider(),
         new BookingFeatureProvider()
@@ -62,7 +64,8 @@ public static class DIContainer
     {
         await using AsyncServiceScope scope = app.Services.CreateAsyncScope();
         AppDbContext dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        if(await dbContext.Rooms.CountAsync() == 0)
+        
+        if(!await dbContext.Rooms.AnyAsync())
         {
             await dbContext.Rooms.AddRangeAsync(
                 new RoomEntity()

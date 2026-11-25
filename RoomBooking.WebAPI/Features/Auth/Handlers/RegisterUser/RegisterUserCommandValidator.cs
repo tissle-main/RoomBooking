@@ -1,0 +1,12 @@
+﻿using FluentValidation;
+
+namespace RoomBooking.WebAPI.Features.Auth.Handlers.RegisterUser;
+
+public sealed class RegisterUserCommandValidator : AbstractValidator<RegisterUserCommand>
+{
+    public RegisterUserCommandValidator()
+    {
+        base.RuleFor(e => e.Email).NotEmpty().EmailAddress();
+        base.RuleFor(e => e.Password).NotEmpty().Matches(AuthConstraints.PassRegex).WithMessage(AuthErrors.InvalidPasswordMessage);
+    }
+}

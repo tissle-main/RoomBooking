@@ -2,11 +2,11 @@
 using RoomBooking.WebAPI.Features.Rooms.Dtos;
 using RoomBooking.WebAPI.Features.Rooms.GetRooms;
 
-namespace RoomBooking.IntegrationTests.Features.Rooms.GetRooms;
+namespace RoomBooking.IntegrationTests.Features.Rooms;
 
 [DependsOn<RoomSeedingTests>]
 [ClassDataSource<AppFixture>(Shared = SharedType.PerTestSession)]
-public sealed class GetRoomsTests(AppFixture thisApp)
+public sealed class GetRoomsHandlerTests(AppFixture thisApp)
 {
     [Test]
     public async ValueTask Handler_ShouldReturnAllRooms(CancellationToken cancellationToken)

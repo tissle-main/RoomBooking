@@ -6,11 +6,11 @@ using RoomBooking.WebAPI.Features.Bookings.Dtos;
 using RoomBooking.IntegrationTests.Features.Rooms;
 using RoomBooking.WebAPI.Features.Bookings.CreateBooking;
 
-namespace RoomBooking.IntegrationTests.Features.Bookings.CreateBooking;
+namespace RoomBooking.IntegrationTests.Features.Bookings;
 
 [DependsOn<RoomSeedingTests>]
 [ClassDataSource<AppFixture>(Shared = SharedType.PerTestSession)]
-public sealed class CreateBookingTests(AppFixture thisApp)
+public sealed class CreateBookingHandlerTests(AppFixture thisApp)
 {
     private static Faker Faker { get; } = new();
 

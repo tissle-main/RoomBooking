@@ -6,11 +6,11 @@ using RoomBooking.WebAPI.Features.Bookings.Dtos;
 using RoomBooking.IntegrationTests.Features.Rooms;
 using RoomBooking.WebAPI.Features.Bookings.GetActiveBookings;
 
-namespace RoomBooking.IntegrationTests.Features.Bookings.GetActiveBookings;
+namespace RoomBooking.IntegrationTests.Features.Bookings;
 
 [DependsOn<RoomSeedingTests>]
 [ClassDataSource<AppFixture>(Shared = SharedType.PerTestSession)]
-public sealed class GetActiveBookingsTests(AppFixture thisApp)
+public sealed class GetActiveBookingsHandlerTests(AppFixture thisApp)
 {
     private static Faker Faker { get; } = new();
 
@@ -43,9 +43,9 @@ public sealed class GetActiveBookingsTests(AppFixture thisApp)
         {
             BookingDto[] expectedBookings = await db.Bookings.AsNoTracking().Where(
                 b => b.RoomId == roomId
-                     && !b.Cancelled
-                     && b.StartTime < dayEnd
-                     && b.EndTime > dayStart
+                        && !b.Cancelled
+                        && b.StartTime < dayEnd
+                        && b.EndTime > dayStart
             ).Select(BookingDto.Projection).OrderBy(b => b.StartTime).ToArrayAsync(cancellationToken);
             await Assert.That(expectedBookings).IsEquivalentTo(bookings!, CollectionOrdering.Matching);
         });
