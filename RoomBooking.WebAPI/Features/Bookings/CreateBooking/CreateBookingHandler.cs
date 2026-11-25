@@ -23,12 +23,21 @@ public sealed class CreateBookingHandler(AppDbContext thisDbContext) : ICommandH
 
         BookingEntity booking = command.ToSource();
         booking.UserId = command.User.Id;
+        booking.PaymentState = room.IsFree ? BookingPaymentState.NotRequired : BookingPaymentState.PendingPayment;
+        DateTime now = DateTime.UtcNow;
+        if(booking.PaymentState == BookingPaymentState.PendingPayment)
+        {
+            booking.PendingPaymentExpireAt = now.AddMinutes(15);
+        }
         booking.StartTime = booking.StartTime.ToUniversalTime();
         booking.EndTime = booking.EndTime.ToUniversalTime();
 
         bool isOverlapping = await thisDbContext.Bookings.AsNoTracking().AnyAsync(
             b => b.RoomId == booking.RoomId
                  && !b.Cancelled
+                 && (b.PaymentState == BookingPaymentState.NotRequired
+                     || b.PaymentState == BookingPaymentState.PaymentSucceded
+                     || (b.PaymentState == BookingPaymentState.PendingPayment && b.PendingPaymentExpireAt < now))
                  && booking.StartTime < b.EndTime
                  && booking.EndTime > b.StartTime,
             cancellationToken

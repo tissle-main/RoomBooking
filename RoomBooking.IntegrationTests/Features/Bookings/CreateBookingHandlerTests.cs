@@ -3,6 +3,7 @@ using System.Net;
 using Microsoft.EntityFrameworkCore;
 using RoomBooking.Data.Entities.Users;
 using RoomBooking.Data.Entities.Bookings;
+using RoomBooking.Data.Entities.Rooms;
 using RoomBooking.IntegrationTests.Seeders;
 using RoomBooking.WebAPI.Features.Bookings.Dtos;
 using RoomBooking.IntegrationTests.Features.Auth;
@@ -19,17 +20,22 @@ public sealed class CreateBookingHandlerTests(AppFixture thisApp)
     private static Faker Faker { get; } = new();
 
     [Test]
-    public async ValueTask Handler_ShouldCreateBooking(CancellationToken cancellationToken)
+    [Arguments(true, BookingPaymentState.NotRequired)]
+    [Arguments(false, BookingPaymentState.PendingPayment)]
+    public async ValueTask Handler_ShouldCreateBooking(bool roomIsFree, BookingPaymentState expectedPaymentState, CancellationToken cancellationToken)
     {
         //Arrange
         await thisApp.ResetAsync(cancellationToken);
         (UserEntity user, _) = await thisApp.AddUsers2AndLoginRandomAsync(cancellationToken);
         Guid roomId = await thisApp.ExecuteDbContextAsync(async db =>
         {
-            Guid[] roomIds = await db.Rooms.Select(r => r.Id).ToArrayAsync(cancellationToken);
-            return Faker.PickRandom(roomIds);
+            RoomEntity room = await db.Rooms.FirstAsync(cancellationToken);
+            room.IsFree = roomIsFree;
+            await db.SaveChangesAsync(cancellationToken);
+            return room.Id;
         });
         CreateBookingCommand command = new(new Faker<BookingEntity>().Valid(roomId));
+        DateTime beforeCreate = DateTime.UtcNow;
 
         //Act
         (HttpResponseMessage message, BookingDto? booking) = await thisApp.HttpClient.SendCreateBooking2(command, cancellationToken);
@@ -46,6 +52,14 @@ public sealed class CreateBookingHandlerTests(AppFixture thisApp)
             await Assert.That(bookingEntity.StartTime).IsEqualTo(command.StartTime.ToUniversalTime());
             await Assert.That(bookingEntity.EndTime).IsEqualTo(command.EndTime.ToUniversalTime());
             await Assert.That(bookingEntity.UserId).IsEqualTo(user.Id);
+            await Assert.That(bookingEntity.PaymentState).IsEqualTo(expectedPaymentState);
+            if(expectedPaymentState == BookingPaymentState.PendingPayment)
+            {
+                DateTime earliestExpiry = beforeCreate.AddMinutes(15);
+                DateTime latestExpiry = DateTime.UtcNow.AddMinutes(15);
+                await Assert.That(bookingEntity.PendingPaymentExpireAt >= earliestExpiry
+                                  && bookingEntity.PendingPaymentExpireAt <= latestExpiry).IsTrue();
+            }
         });
     }
 
@@ -79,6 +93,56 @@ public sealed class CreateBookingHandlerTests(AppFixture thisApp)
 
         //Assert
         await Assert.That(message.StatusCode).IsEqualTo(HttpStatusCode.Conflict);
+    }
+
+    [Test]
+    [Arguments(BookingPaymentState.NotRequired, false, true)]
+    [Arguments(BookingPaymentState.PaymentSucceded, false, true)]
+    [Arguments(BookingPaymentState.PendingPayment, true, true)]
+    [Arguments(BookingPaymentState.PendingPayment, false, false)]
+    [Arguments(BookingPaymentState.PaymentFailed, true, false)]
+    public async ValueTask Handler_ShouldConsiderPaymentState_WhenCheckingOverlaps(
+        BookingPaymentState existingPaymentState,
+        bool existingPaymentIsExpired,
+        bool shouldOverlap,
+        CancellationToken cancellationToken
+    )
+    {
+        //Arrange
+        await thisApp.ResetAsync(cancellationToken);
+        (UserEntity user, _) = await thisApp.AddUsers2AndLoginRandomAsync(cancellationToken);
+        Guid roomId = await thisApp.ExecuteDbContextAsync(async db =>
+        {
+            return await db.Rooms.Select(r => r.Id).FirstAsync(cancellationToken);
+        });
+        DateTime now = DateTime.UtcNow;
+        BookingEntity existingBooking = new Faker<BookingEntity>().Valid(roomId).WithUserId(user.Id)
+            .WithPaymentState(existingPaymentState)
+            .WithPendingPaymentExpiresAt(existingPaymentIsExpired ? now.AddMinutes(-1) : now.AddMinutes(10))
+            .Generate();
+        await thisApp.ExecuteDbContextAsync(async db =>
+        {
+            await db.Bookings.AddAsync(existingBooking, cancellationToken);
+            await db.SaveChangesAsync(cancellationToken);
+        });
+        var command = new CreateBookingCommand(new Faker<BookingEntity>().Valid(roomId)) with
+        {
+            StartTime = existingBooking.StartTime,
+            EndTime = existingBooking.EndTime
+        };
+
+        //Act
+        using HttpResponseMessage message = await thisApp.HttpClient.SendCreateBooking(command, cancellationToken);
+
+        //Assert
+        if(shouldOverlap)
+        {
+            await Assert.That(message.StatusCode).IsEqualTo(HttpStatusCode.Conflict);
+        }
+        else
+        {
+            await Assert.That(message.IsSuccessStatusCode).IsTrue();
+        }
     }
 
     [Test]

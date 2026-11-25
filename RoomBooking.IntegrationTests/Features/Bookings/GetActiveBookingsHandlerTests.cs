@@ -44,9 +44,26 @@ public sealed class GetActiveBookingsHandlerTests(AppFixture thisApp)
             Guid[] roomIds = await db.Rooms.Select(r => r.Id).ToArrayAsync(cancellationToken);
             return Faker.PickRandom(roomIds);
         });
+        DateTime now = DateTime.UtcNow;
         await thisApp.ExecuteDbContextAsync(async db =>
         {
-            await new Faker<BookingEntity>().Valid(roomId).WithUserId(users[0].User.Id).SeedDatabaseAsync(db, cancellationToken);
+            await new Faker<BookingEntity>().Valid(roomId).WithUserId(users[0].User.Id)
+                .WithPaymentState(BookingPaymentState.NotRequired)
+                .WithPendingPaymentExpiresAt(now.AddMinutes(10))
+                .SeedDatabaseAsync(db, cancellationToken);
+            await new Faker<BookingEntity>().Valid(roomId).WithUserId(users[0].User.Id)
+                .WithPaymentState(BookingPaymentState.PaymentSucceded)
+                .WithPendingPaymentExpiresAt(now.AddMinutes(10)).SeedDatabaseAsync(db, cancellationToken);
+            await new Faker<BookingEntity>().Valid(roomId).WithUserId(users[0].User.Id)
+                .WithPaymentState(BookingPaymentState.PendingPayment)
+                .WithPendingPaymentExpiresAt(now.AddMinutes(-1))
+                .SeedDatabaseAsync(db, cancellationToken);
+            await new Faker<BookingEntity>().Valid(roomId).WithUserId(users[0].User.Id)
+                .WithPaymentState(BookingPaymentState.PendingPayment)
+                .WithPendingPaymentExpiresAt(now.AddMinutes(10)).SeedDatabaseAsync(db, cancellationToken);
+            await new Faker<BookingEntity>().Valid(roomId).WithUserId(users[0].User.Id)
+                .WithPaymentState(BookingPaymentState.PaymentFailed)
+                .WithPendingPaymentExpiresAt(now.AddMinutes(-1)).SeedDatabaseAsync(db, cancellationToken);
             await new Faker<BookingEntity>().Valid(roomId).WithUserId(users[0].User.Id).Cancelled().SeedDatabaseAsync(db, cancellationToken);
             await new Faker<BookingEntity>().Valid(roomId).WithUserId(users[1].User.Id).SeedDatabaseAsync(db, cancellationToken);
         });
@@ -66,6 +83,9 @@ public sealed class GetActiveBookingsHandlerTests(AppFixture thisApp)
                 b => b.RoomId == roomId
                             && b.UserId == users[0].User.Id
                             && !b.Cancelled
+                            && (b.PaymentState == BookingPaymentState.NotRequired
+                                || b.PaymentState == BookingPaymentState.PaymentSucceded
+                                || (b.PaymentState == BookingPaymentState.PendingPayment && b.PendingPaymentExpireAt < now))
                             && b.StartTime < dayEnd
                         && b.EndTime > dayStart
             ).Select(BookingDto.Projection).OrderBy(b => b.StartTime).ToArrayAsync(cancellationToken);

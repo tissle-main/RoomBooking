@@ -21,6 +21,7 @@ public sealed class RefreshAccessTokenHandlerTests(AppFixture thisApp)
         {
             return await db.RefreshTokens.SingleAsync(cancellationToken);
         });
+        thisApp.HttpClient.DefaultRequestHeaders.Add("Cookie", $"{HttpContextExtensions.RefreshTokenKey}={oldRefreshToken.Value}");
 
         //Act
         (HttpResponseMessage message, RefreshAccessTokenResponse? response) = await thisApp.HttpClient.SendRefreshAccessTokenAsync2(cancellationToken);
@@ -44,13 +45,14 @@ public sealed class RefreshAccessTokenHandlerTests(AppFixture thisApp)
         //Arrange
         await thisApp.ResetAsync(cancellationToken);
         await thisApp.AddUsers2AndLoginRandomAsync(cancellationToken);
-        await thisApp.ExecuteDbContextAsync(async db =>
+        RefreshTokenEntity refreshToken = await thisApp.ExecuteDbContextAsync(async db =>
         {
             RefreshTokenEntity entity = await db.RefreshTokens.SingleAsync(cancellationToken);
             db.RefreshTokens.Remove(entity);
             await db.SaveChangesAsync(cancellationToken);
             return entity;
         });
+        thisApp.HttpClient.DefaultRequestHeaders.Add("Cookie", $"{HttpContextExtensions.RefreshTokenKey}={refreshToken.Value}");
 
         //Act
         using HttpResponseMessage response = await thisApp.HttpClient.SendRefreshAccessTokenAsync(cancellationToken);
@@ -65,7 +67,7 @@ public sealed class RefreshAccessTokenHandlerTests(AppFixture thisApp)
         //Arrange
         await thisApp.ResetAsync(cancellationToken);
         await thisApp.AddUsers2AndLoginRandomAsync(cancellationToken);
-        await thisApp.ExecuteDbContextAsync(async db =>
+        RefreshTokenEntity refreshToken = await thisApp.ExecuteDbContextAsync(async db =>
         {
             RefreshTokenEntity entity = await db.RefreshTokens.SingleAsync(cancellationToken);
             entity.ExpiresAt = DateTime.UtcNow.AddDays(-1);
@@ -73,6 +75,7 @@ public sealed class RefreshAccessTokenHandlerTests(AppFixture thisApp)
             await db.SaveChangesAsync(cancellationToken);
             return entity;
         });
+        thisApp.HttpClient.DefaultRequestHeaders.Add("Cookie", $"{HttpContextExtensions.RefreshTokenKey}={refreshToken.Value}");
 
         //Act
         using HttpResponseMessage response = await thisApp.HttpClient.SendRefreshAccessTokenAsync(cancellationToken);

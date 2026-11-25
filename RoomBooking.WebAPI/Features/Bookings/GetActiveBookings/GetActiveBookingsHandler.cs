@@ -2,6 +2,7 @@
 using Mediator;
 using RoomBooking.Data;
 using Microsoft.EntityFrameworkCore;
+using RoomBooking.Data.Entities.Bookings;
 using RoomBooking.Data.Entities.Rooms;
 using RoomBooking.WebAPI.Features.Rooms;
 using RoomBooking.WebAPI.Behaviors.Authorized;
@@ -27,11 +28,15 @@ public sealed class GetActiveBookingsHandler(
 
         DateTime dayStart = query.Day.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
         DateTime dayEnd = query.Day.AddDays(1).ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
+        DateTime now = DateTime.UtcNow;
         Guid userId = query.User.Id;
         return await thisDbContext.Bookings.AsNoTracking().Where(
             b => b.RoomId == room.Id
                  && b.UserId == userId
                  && !b.Cancelled
+                 && (b.PaymentState == BookingPaymentState.NotRequired
+                     || b.PaymentState == BookingPaymentState.PaymentSucceded
+                     || (b.PaymentState == BookingPaymentState.PendingPayment && b.PendingPaymentExpireAt < now))
                  && b.StartTime < dayEnd
                  && b.EndTime > dayStart
         ).OrderBy(b => b.StartTime).Select(BookingDto.Projection).ToArrayAsync(cancellationToken);

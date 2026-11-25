@@ -8,6 +8,7 @@ using RoomBooking.WebAPI.Features.Auth;
 using RoomBooking.WebAPI.Features.Rooms;
 using RoomBooking.WebAPI.Features.Serilog;
 using RoomBooking.WebAPI.Features.Bookings;
+using RoomBooking.WebAPI.Features.Payment;
 using RoomBooking.WebAPI.Behaviors.Validation;
 using RoomBooking.WebAPI.Behaviors.Authorized;
 using RoomBooking.WebAPI.Features.EndpointExplorer;
@@ -21,7 +22,8 @@ public static class DIContainer
         new AuthFeatureProvider(),
         new EndpointExplorerFeatureProvider(),
         new RoomFeatureProvider(),
-        new BookingFeatureProvider()
+        new BookingFeatureProvider(),
+        new PaymentFeatureProvider()
     ];
 
     public static void AddCQRS(this IServiceCollection services)
@@ -74,7 +76,8 @@ public static class DIContainer
             await dbContext.Rooms.AddRangeAsync(
                 new RoomEntity()
                 {
-                    Name = "Room 1"
+                    Name = "Room 1",
+                    IsFree = true
                 },
                 new RoomEntity()
                 {

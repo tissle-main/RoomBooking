@@ -40,4 +40,8 @@
 		<PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="11.0.1" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Folder Include="Features\Bookings\PayForBooking\" />
+	</ItemGroup>
+
 </Project>

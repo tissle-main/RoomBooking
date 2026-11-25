@@ -16,7 +16,7 @@ partial class AppDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261125105458_AuthMigration";
+    public override string LastMigrationId => "20261125134156_PendingPaymentMigration";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -142,6 +142,12 @@ partial class AppDbContextModelSnapshot : ModelSnapshot
                 b.Property<DateTimeOffset>("EndTime")
                     .HasColumnType("datetimeoffset");
 
+                b.Property<int>("PaymentState")
+                    .HasColumnType("int");
+
+                b.Property<DateTime>("PendingPaymentExpireAt")
+                    .HasColumnType("datetime2");
+
                 b.Property<Guid>("RoomId")
                     .HasColumnType("uniqueidentifier");
 
@@ -153,9 +159,14 @@ partial class AppDbContextModelSnapshot : ModelSnapshot
                     .HasMaxLength(100)
                     .HasColumnType("nvarchar(100)");
 
+                b.Property<Guid>("UserId")
+                    .HasColumnType("uniqueidentifier");
+
                 b.HasKey("Id");
 
                 b.HasIndex("RoomId");
+
+                b.HasIndex("UserId");
 
                 b.ToTable("Bookings");
             });
@@ -217,6 +228,9 @@ partial class AppDbContextModelSnapshot : ModelSnapshot
                 b.Property<Guid>("Id")
                     .ValueGeneratedOnAdd()
                     .HasColumnType("uniqueidentifier");
+
+                b.Property<bool>("IsFree")
+                    .HasColumnType("bit");
 
                 b.Property<string>("Name")
                     .IsRequired()
@@ -353,7 +367,15 @@ partial class AppDbContextModelSnapshot : ModelSnapshot
                     .OnDelete(DeleteBehavior.Cascade)
                     .IsRequired();
 
+                b.HasOne("RoomBooking.Data.Entities.Users.UserEntity", "User")
+                    .WithMany("Bookings")
+                    .HasForeignKey("UserId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+
                 b.Navigation("Room");
+
+                b.Navigation("User");
             });
 
         modelBuilder.Entity("RoomBooking.Data.Entities.RefreshTokens.RefreshTokenEntity", b =>
@@ -374,6 +396,8 @@ partial class AppDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("RoomBooking.Data.Entities.Users.UserEntity", b =>
             {
+                b.Navigation("Bookings");
+
                 b.Navigation("RefreshTokens");
             });
 #pragma warning restore 612, 618

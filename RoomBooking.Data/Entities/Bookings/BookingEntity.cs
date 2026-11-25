@@ -11,6 +11,8 @@ public sealed class BookingEntity
     public DateTimeOffset StartTime { get; set; }
     public DateTimeOffset EndTime { get; set; }
     public bool Cancelled { get; set; }
+    public BookingPaymentState PaymentState { get; set; }
+    public DateTime PendingPaymentExpireAt { get; set; }
     public Guid RoomId { get; set; }
     public Guid UserId { get; set; }
 

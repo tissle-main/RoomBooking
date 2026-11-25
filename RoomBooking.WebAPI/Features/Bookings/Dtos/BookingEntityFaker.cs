@@ -28,6 +28,14 @@ public static class BookingEntityFaker
             thisFaker.RuleFor(b => b.StartTime, startTime);
             return thisFaker.RuleFor(b => b.EndTime, endTime);
         }
+        public Faker<BookingEntity> WithPaymentState(BookingPaymentState paymentState)
+        {
+            return thisFaker.RuleFor(b => b.PaymentState, paymentState);
+        }
+        public Faker<BookingEntity> WithPendingPaymentExpiresAt(DateTime expiresAt)
+        {
+            return thisFaker.RuleFor(b => b.PendingPaymentExpireAt, expiresAt);
+        }
         public Faker<BookingEntity> WithEmptyTitle()
         {
             return thisFaker.RuleFor(b => b.Title, string.Empty);

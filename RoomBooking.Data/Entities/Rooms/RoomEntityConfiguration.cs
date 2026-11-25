@@ -10,6 +10,7 @@ public sealed class RoomEntityConfiguration : IEntityTypeConfiguration<RoomEntit
     {
         builder.HasKey(r => r.Id);
         builder.Property(r => r.Name).IsRequired().HasMaxLength(RoomEntityConstaints.NameMaxLength);
+        builder.Property(r => r.IsFree).IsRequired();
     }
     #endregion
 }
