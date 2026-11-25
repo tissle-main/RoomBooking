@@ -24,8 +24,8 @@ public sealed class GetActiveBookingsHandler(
             return RoomErrors.RoomNotFound(query.RoomId);
         }
 
-        DateTime dayStart = query.Day.ToDateTime(TimeOnly.MinValue).ToUniversalTime();
-        DateTime dayEnd = query.Day.AddDays(1).ToDateTime(TimeOnly.MinValue).ToUniversalTime();
+        DateTime dayStart = query.Day.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
+        DateTime dayEnd = query.Day.AddDays(1).ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
         return await thisDbContext.Bookings.AsNoTracking().Where(
             b => b.RoomId == room.Id
                  && !b.Cancelled

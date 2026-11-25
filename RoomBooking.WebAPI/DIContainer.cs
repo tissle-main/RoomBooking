@@ -79,5 +79,6 @@ public static class DIContainer
                 }
             );
         }
+        await dbContext.SaveChangesAsync();
     }
 }
