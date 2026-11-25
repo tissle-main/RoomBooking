@@ -10,7 +10,11 @@ public sealed class EndpointExplorerFeatureProvider : FeatureProvider
         if(builder.Environment.IsDevelopment())
         {
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddOpenApi();
+            builder.Services.AddOpenApi(options =>
+            {
+                options.AddDocumentTransformer<BearerSecurityDocumentTransformer>();
+                options.AddOperationTransformer<BearerSecurityOperationTransformer>();
+            });
         }
     }
     public override void UseMiddleware(WebApplication app)

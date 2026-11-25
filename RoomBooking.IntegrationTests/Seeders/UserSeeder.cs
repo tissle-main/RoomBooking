@@ -1,4 +1,5 @@
 ﻿using Bogus;
+using System.Net.Http.Headers;
 using Microsoft.EntityFrameworkCore;
 using RoomBooking.Data.Entities.Users;
 using RoomBooking.WebAPI.Features.Auth.Handlers.LoginUser;
@@ -60,6 +61,21 @@ public static class UserSeeder
     {
         return Faker.PickRandom(await app.AddUsers2Async(cancellationToken, min, max));
     }
+    public static async ValueTask AuthenticateAsAsync(
+        this AppFixture app,
+        UserEntity user,
+        string password,
+        CancellationToken cancellationToken
+    )
+    {
+        LoginUserCommand login = new Faker<LoginUserCommand>().Valid().WithEmail(user.Email!).WithPassword(password);
+        using HttpResponseMessage response = await app.HttpClient.SendLoginUserAsync(login, cancellationToken);
+        response.EnsureSuccessStatusCode();
+
+        LoginUserResponse? result = await response.Content.ReadFromJsonAsync<LoginUserResponse>(cancellationToken);
+        await Assert.That(result).IsNotNull();
+        app.HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", result!.AccessToken);
+    }
     public static async ValueTask<(UserEntity User, string Password)> AddUsers2AndLoginRandomAsync(
         this AppFixture app,
         CancellationToken cancellationToken,
@@ -68,13 +84,7 @@ public static class UserSeeder
     )
     {
         (UserEntity user, string password) = await app.AddUsers2AndPickRandomAsync(cancellationToken, min, max);
-        LoginUserCommand login = new Faker<LoginUserCommand>().Valid().WithEmail(user.Email!).WithPassword(password);
-
-        using HttpResponseMessage response = await app.HttpClient.SendLoginUserAsync(login, cancellationToken);
-        response.EnsureSuccessStatusCode();
-
-        LoginUserResponse? result = await response.Content.ReadFromJsonAsync<LoginUserResponse>(cancellationToken);
-        await Assert.That(result).IsNotNull();
+        await app.AuthenticateAsAsync(user, password, cancellationToken);
         return (user, password);
     }
 }

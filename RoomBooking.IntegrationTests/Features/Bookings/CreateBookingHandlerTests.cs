@@ -1,14 +1,18 @@
 ﻿using Bogus;
 using System.Net;
 using Microsoft.EntityFrameworkCore;
+using RoomBooking.Data.Entities.Users;
 using RoomBooking.Data.Entities.Bookings;
+using RoomBooking.IntegrationTests.Seeders;
 using RoomBooking.WebAPI.Features.Bookings.Dtos;
+using RoomBooking.IntegrationTests.Features.Auth;
 using RoomBooking.IntegrationTests.Features.Rooms;
 using RoomBooking.WebAPI.Features.Bookings.CreateBooking;
 
 namespace RoomBooking.IntegrationTests.Features.Bookings;
 
 [DependsOn<RoomSeedingTests>]
+[DependsOn<LoginUserHandlerTests>]
 [ClassDataSource<AppFixture>(Shared = SharedType.PerTestSession)]
 public sealed class CreateBookingHandlerTests(AppFixture thisApp)
 {
@@ -19,6 +23,7 @@ public sealed class CreateBookingHandlerTests(AppFixture thisApp)
     {
         //Arrange
         await thisApp.ResetAsync(cancellationToken);
+        (UserEntity user, _) = await thisApp.AddUsers2AndLoginRandomAsync(cancellationToken);
         Guid roomId = await thisApp.ExecuteDbContextAsync(async db =>
         {
             Guid[] roomIds = await db.Rooms.Select(r => r.Id).ToArrayAsync(cancellationToken);
@@ -40,6 +45,7 @@ public sealed class CreateBookingHandlerTests(AppFixture thisApp)
             await Assert.That(bookingEntity.Title).IsEqualTo(command.Title);
             await Assert.That(bookingEntity.StartTime).IsEqualTo(command.StartTime.ToUniversalTime());
             await Assert.That(bookingEntity.EndTime).IsEqualTo(command.EndTime.ToUniversalTime());
+            await Assert.That(bookingEntity.UserId).IsEqualTo(user.Id);
         });
     }
 
@@ -51,6 +57,7 @@ public sealed class CreateBookingHandlerTests(AppFixture thisApp)
     {
         //Arrange
         await thisApp.ResetAsync(cancellationToken);
+        (UserEntity user, _) = await thisApp.AddUsers2AndLoginRandomAsync(cancellationToken);
         Guid roomId = await thisApp.ExecuteDbContextAsync(async db =>
         {
             Guid[] roomIds = await db.Rooms.Select(r => r.Id).ToArrayAsync(cancellationToken);
@@ -58,7 +65,7 @@ public sealed class CreateBookingHandlerTests(AppFixture thisApp)
         });
         List<BookingEntity> bookings = await thisApp.ExecuteDbContextAsync(async db =>
         {
-            return await new Faker<BookingEntity>().Valid(roomId).SeedDatabaseAsync(db, cancellationToken);
+            return await new Faker<BookingEntity>().Valid(roomId).WithUserId(user.Id).SeedDatabaseAsync(db, cancellationToken);
         });
         BookingEntity booking = Faker.PickRandom(bookings);
         var command = new CreateBookingCommand(new Faker<BookingEntity>().Valid(booking.RoomId)) with
@@ -75,10 +82,25 @@ public sealed class CreateBookingHandlerTests(AppFixture thisApp)
     }
 
     [Test]
+    public async ValueTask Handler_ShouldFail_WhenUserIsUnauthorized(CancellationToken cancellationToken)
+    {
+        //Arrange
+        await thisApp.ResetAsync(cancellationToken);
+        CreateBookingCommand command = new(new Faker<BookingEntity>().Valid(Guid.NewGuid()));
+
+        //Act
+        using HttpResponseMessage message = await thisApp.HttpClient.SendCreateBooking(command, cancellationToken);
+
+        //Assert
+        await Assert.That(message.StatusCode).IsEqualTo(HttpStatusCode.Unauthorized);
+    }
+
+    [Test]
     public async ValueTask Handler_ShouldFail_WhenTitleIsEmpty(CancellationToken cancellationToken)
     {
         //Arrange
         await thisApp.ResetAsync(cancellationToken);
+        await thisApp.AddUsers2AndLoginRandomAsync(cancellationToken);
         Guid roomId = await thisApp.ExecuteDbContextAsync(async db =>
         {
             Guid[] roomIds = await db.Rooms.Select(r => r.Id).ToArrayAsync(cancellationToken);
@@ -98,6 +120,7 @@ public sealed class CreateBookingHandlerTests(AppFixture thisApp)
     {
         //Arrange
         await thisApp.ResetAsync(cancellationToken);
+        await thisApp.AddUsers2AndLoginRandomAsync(cancellationToken);
         Guid roomId = await thisApp.ExecuteDbContextAsync(async db =>
         {
             Guid[] roomIds = await db.Rooms.Select(r => r.Id).ToArrayAsync(cancellationToken);
@@ -117,6 +140,7 @@ public sealed class CreateBookingHandlerTests(AppFixture thisApp)
     {
         //Arrange
         await thisApp.ResetAsync(cancellationToken);
+        await thisApp.AddUsers2AndLoginRandomAsync(cancellationToken);
         Guid roomId = await thisApp.ExecuteDbContextAsync(async db =>
         {
             Guid[] roomIds = await db.Rooms.Select(r => r.Id).ToArrayAsync(cancellationToken);

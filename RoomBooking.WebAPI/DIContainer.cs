@@ -9,6 +9,7 @@ using RoomBooking.WebAPI.Features.Rooms;
 using RoomBooking.WebAPI.Features.Serilog;
 using RoomBooking.WebAPI.Features.Bookings;
 using RoomBooking.WebAPI.Behaviors.Validation;
+using RoomBooking.WebAPI.Behaviors.Authorized;
 using RoomBooking.WebAPI.Features.EndpointExplorer;
 
 namespace RoomBooking.WebAPI;
@@ -28,7 +29,10 @@ public static class DIContainer
         services.AddMediator(options =>
         {
             options.ServiceLifetime = ServiceLifetime.Scoped;
-            options.PipelineBehaviors = [typeof(ValidationBehavior<,>)];
+            options.PipelineBehaviors = [
+                typeof(ValidationBehavior<,>),
+                typeof(AuthorizedBehavior<,>)
+            ];
         });
         services.AddValidatorsFromAssemblyContaining(typeof(DIContainer), ServiceLifetime.Singleton);
         ValidatorOptions.Global.LanguageManager.Enabled = false;

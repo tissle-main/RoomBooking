@@ -2,6 +2,7 @@
 using ErrorOr;
 using Mediator;
 using RoomBooking.Data.Entities.Bookings;
+using RoomBooking.WebAPI.Behaviors.Authorized;
 using RoomBooking.WebAPI.Features.Bookings.Dtos;
 
 namespace RoomBooking.WebAPI.Features.Bookings.CreateBooking;
@@ -11,8 +12,10 @@ namespace RoomBooking.WebAPI.Features.Bookings.CreateBooking;
     exclude: [
         nameof(BookingEntity.Room),
         nameof(BookingEntity.Id),
-        nameof(BookingEntity.Cancelled)
+        nameof(BookingEntity.Cancelled),
+        nameof(BookingEntity.User),
+        nameof(BookingEntity.UserId),
     ],
     GenerateToSource = true
 )]
-public sealed partial record class CreateBookingCommand : ICommand<ErrorOr<BookingDto>>;
+public sealed partial record class CreateBookingCommand : ICommand<ErrorOr<BookingDto>>, IAuthorizedBehaviorMessage;

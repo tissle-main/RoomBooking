@@ -1,6 +1,7 @@
 ﻿using ErrorOr;
 using Mediator;
 using Microsoft.AspNetCore.Mvc;
+using RoomBooking.WebAPI.Behaviors.Authorized;
 using RoomBooking.WebAPI.Extensions;
 
 namespace RoomBooking.WebAPI.Features.Bookings.CancelBooking;
@@ -24,6 +25,8 @@ public static class CancelBookingEndpoint
         builder.WithName(nameof(CancelBooking));
         builder.Produces(StatusCodes.Status204NoContent);
         builder.ProducesProblem(StatusCodes.Status404NotFound);
+        builder.AddAuthorizedBehaviorProductionProblems();
+        builder.RequireAuthorization();
     }
     public static async ValueTask<HttpResponseMessage> SendCancelBooking(
         this HttpClient httpClient,

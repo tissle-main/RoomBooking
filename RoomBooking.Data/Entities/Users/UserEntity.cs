@@ -8,4 +8,5 @@ public sealed class UserEntity : IdentityUser<Guid>
 {
     //Navigation properties
     public List<RefreshTokenEntity> RefreshTokens { get; set; } = [];
+    public List<BookingEntity> Bookings { get; set; } = [];
 }

@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using RoomBooking.Data.Entities.Rooms;
 using RoomBooking.WebAPI.Features.Rooms;
 using RoomBooking.Data.Entities.Bookings;
+using RoomBooking.WebAPI.Behaviors.Authorized;
 using RoomBooking.WebAPI.Features.Bookings.Dtos;
 
 namespace RoomBooking.WebAPI.Features.Bookings.CreateBooking;
@@ -19,8 +20,9 @@ public sealed class CreateBookingHandler(AppDbContext thisDbContext) : ICommandH
         {
             return RoomErrors.RoomNotFound(command.RoomId);
         }
-        
+
         BookingEntity booking = command.ToSource();
+        booking.UserId = command.User.Id;
         booking.StartTime = booking.StartTime.ToUniversalTime();
         booking.EndTime = booking.EndTime.ToUniversalTime();
 

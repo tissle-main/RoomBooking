@@ -1,4 +1,5 @@
 ﻿using RoomBooking.Data.Entities.Rooms;
+using RoomBooking.Data.Entities.Users;
 
 namespace RoomBooking.Data.Entities.Bookings;
 
@@ -11,7 +12,9 @@ public sealed class BookingEntity
     public DateTimeOffset EndTime { get; set; }
     public bool Cancelled { get; set; }
     public Guid RoomId { get; set; }
+    public Guid UserId { get; set; }
 
     //Navigation properties
     public RoomEntity? Room { get; set; }
+    public UserEntity? User { get; set; }
 }

@@ -7,6 +7,7 @@ namespace RoomBooking.WebAPI.Features.Bookings.Dtos;
     sourceType: typeof(BookingEntity),
     exclude: [
         nameof(BookingEntity.Room),
+        nameof(BookingEntity.User),
     ]
 )]
 public sealed partial class BookingDto;

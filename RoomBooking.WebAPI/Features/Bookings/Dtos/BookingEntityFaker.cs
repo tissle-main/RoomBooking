@@ -17,6 +17,10 @@ public static class BookingEntityFaker
                 RoomId = roomId
             }).WithBookingPeriod(minStartTime ?? DateTimeOffset.UtcNow);
         }
+        public Faker<BookingEntity> WithUserId(Guid userId)
+        {
+            return thisFaker.RuleFor(b => b.UserId, userId);
+        }
         public Faker<BookingEntity> WithBookingPeriod(DateTimeOffset minStartTime)
         {
             DateTimeOffset startTime = Faker.Date.SoonOffset(refDate: minStartTime);

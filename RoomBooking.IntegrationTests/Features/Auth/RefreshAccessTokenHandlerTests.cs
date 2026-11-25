@@ -11,14 +11,6 @@ namespace RoomBooking.IntegrationTests.Features.Auth;
 [ClassDataSource<AppFixture>(Shared = SharedType.PerTestSession)]
 public sealed class RefreshAccessTokenHandlerTests(AppFixture thisApp)
 {
-    #region Static
-    private static void AddRefreshTokenToHttpClient(HttpClient httpClient, string refreshToken)
-    {
-        httpClient.DefaultRequestHeaders.Add("Cookie", $"{HttpContextExtensions.RefreshTokenKey}={refreshToken}");
-    }
-    #endregion
-
-    #region Instance
     [Test]
     public async ValueTask Handler_ShouldReplaceRefreshToken(CancellationToken cancellationToken)
     {
@@ -29,7 +21,6 @@ public sealed class RefreshAccessTokenHandlerTests(AppFixture thisApp)
         {
             return await db.RefreshTokens.SingleAsync(cancellationToken);
         });
-        AddRefreshTokenToHttpClient(thisApp.HttpClient, oldRefreshToken.Value);
 
         //Act
         (HttpResponseMessage message, RefreshAccessTokenResponse? response) = await thisApp.HttpClient.SendRefreshAccessTokenAsync2(cancellationToken);
@@ -53,14 +44,13 @@ public sealed class RefreshAccessTokenHandlerTests(AppFixture thisApp)
         //Arrange
         await thisApp.ResetAsync(cancellationToken);
         await thisApp.AddUsers2AndLoginRandomAsync(cancellationToken);
-        RefreshTokenEntity refreshToken = await thisApp.ExecuteDbContextAsync(async db =>
+        await thisApp.ExecuteDbContextAsync(async db =>
         {
             RefreshTokenEntity entity = await db.RefreshTokens.SingleAsync(cancellationToken);
             db.RefreshTokens.Remove(entity);
             await db.SaveChangesAsync(cancellationToken);
             return entity;
         });
-        AddRefreshTokenToHttpClient(thisApp.HttpClient, refreshToken.Value);
 
         //Act
         using HttpResponseMessage response = await thisApp.HttpClient.SendRefreshAccessTokenAsync(cancellationToken);
@@ -75,7 +65,7 @@ public sealed class RefreshAccessTokenHandlerTests(AppFixture thisApp)
         //Arrange
         await thisApp.ResetAsync(cancellationToken);
         await thisApp.AddUsers2AndLoginRandomAsync(cancellationToken);
-        RefreshTokenEntity refreshToken = await thisApp.ExecuteDbContextAsync(async db =>
+        await thisApp.ExecuteDbContextAsync(async db =>
         {
             RefreshTokenEntity entity = await db.RefreshTokens.SingleAsync(cancellationToken);
             entity.ExpiresAt = DateTime.UtcNow.AddDays(-1);
@@ -83,7 +73,6 @@ public sealed class RefreshAccessTokenHandlerTests(AppFixture thisApp)
             await db.SaveChangesAsync(cancellationToken);
             return entity;
         });
-        AddRefreshTokenToHttpClient(thisApp.HttpClient, refreshToken.Value);
 
         //Act
         using HttpResponseMessage response = await thisApp.HttpClient.SendRefreshAccessTokenAsync(cancellationToken);
@@ -91,5 +80,4 @@ public sealed class RefreshAccessTokenHandlerTests(AppFixture thisApp)
         //Assert
         await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.Unauthorized);
     }
-    #endregion
 }

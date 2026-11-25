@@ -1,6 +1,7 @@
 ﻿using ErrorOr;
 using Mediator;
 using Microsoft.AspNetCore.Mvc;
+using RoomBooking.WebAPI.Behaviors.Authorized;
 using RoomBooking.WebAPI.Extensions;
 using Microsoft.AspNetCore.WebUtilities;
 using RoomBooking.WebAPI.Features.Bookings.Dtos;
@@ -28,6 +29,8 @@ public static class GetActiveBookingsEndpoint
         builder.WithName(nameof(GetActiveBookings));
         builder.Produces<IEnumerable<BookingDto>>(StatusCodes.Status200OK);
         builder.ProducesProblem(StatusCodes.Status404NotFound);
+        builder.AddAuthorizedBehaviorProductionProblems();
+        builder.RequireAuthorization();
     }
 
     private static string MakeSendableUrl(GetActiveBookingsQuery query)

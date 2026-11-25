@@ -1,6 +1,7 @@
 ﻿using ErrorOr;
 using Mediator;
 using Microsoft.AspNetCore.Mvc;
+using RoomBooking.WebAPI.Behaviors.Authorized;
 using RoomBooking.WebAPI.Extensions;
 using RoomBooking.WebAPI.Behaviors.Validation;
 using RoomBooking.WebAPI.Features.Bookings.Dtos;
@@ -28,6 +29,8 @@ public static class CreateBookingEndpoint
         builder.ProducesProblem(StatusCodes.Status404NotFound);
         builder.ProducesProblem(StatusCodes.Status409Conflict);
         builder.AddValidationBehaviorProductionProblems();
+        builder.AddAuthorizedBehaviorProductionProblems();
+        builder.RequireAuthorization();
     }
 
     public static async ValueTask<HttpResponseMessage> SendCreateBooking(

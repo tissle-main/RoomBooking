@@ -14,6 +14,7 @@ public sealed class BookingEntityConfiguration : IEntityTypeConfiguration<Bookin
         builder.Property(b => b.EndTime).IsRequired();
         builder.Property(b => b.Cancelled).IsRequired();
         builder.HasOne(b => b.Room).WithMany(r => r.Bookings).HasForeignKey(b => b.RoomId).IsRequired().OnDelete(DeleteBehavior.Cascade);
+        builder.HasOne(b => b.User).WithMany(u => u.Bookings).HasForeignKey(b => b.UserId).IsRequired().OnDelete(DeleteBehavior.Cascade);
         builder.HasIndex(b => b.RoomId);
     }
     #endregion

@@ -4,6 +4,7 @@ using RoomBooking.Data;
 using Microsoft.EntityFrameworkCore;
 using RoomBooking.Data.Entities.Rooms;
 using RoomBooking.WebAPI.Features.Rooms;
+using RoomBooking.WebAPI.Behaviors.Authorized;
 using RoomBooking.WebAPI.Features.Bookings.Dtos;
 
 namespace RoomBooking.WebAPI.Features.Bookings.GetActiveBookings;
@@ -26,8 +27,10 @@ public sealed class GetActiveBookingsHandler(
 
         DateTime dayStart = query.Day.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
         DateTime dayEnd = query.Day.AddDays(1).ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
+        Guid userId = query.User.Id;
         return await thisDbContext.Bookings.AsNoTracking().Where(
             b => b.RoomId == room.Id
+                 && b.UserId == userId
                  && !b.Cancelled
                  && b.StartTime < dayEnd
                  && b.EndTime > dayStart
